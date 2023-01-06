@@ -7,6 +7,10 @@ const classifiedSchema = new mongoose.Schema({
     isTrue: {type: Boolean, required: true},
     upvotes: {type: Number, default: 0},
     downvotes: {type: Number, default: 0},
+    Comments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'comment'
+    }],
     date: {type: Date, default: Date.now}
 });
 

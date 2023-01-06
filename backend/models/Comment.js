@@ -6,9 +6,13 @@ const commentSchema = new mongoose.Schema({
     link: {type: String, required: true},
     upvotes: {type: Number, default: 0},
     downvotes: {type: Number, default: 0},
-    news: {
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'news'
+        ref: 'user'
+    },
+    classified: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'classified'
     },
     date: {type: Date, default: Date.now}
 });
