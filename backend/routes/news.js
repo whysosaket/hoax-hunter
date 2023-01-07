@@ -29,7 +29,17 @@ router.route("/addnews").post(async (req, res) => {
         });
         if (classification) {
           success = true;
-          res.json({
+          obj = {
+            success,
+            username,
+            message: "News already exists!",
+            open: classification.open,
+            isTrue: classification.isTrue,
+            upvotes: classification.upvotes,
+            downvotes: classification.downvotes,
+          }
+          console.log(obj)
+          return res.json({
             success,
             username,
             message: "News already exists!",

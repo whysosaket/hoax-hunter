@@ -58,14 +58,24 @@ def process_input(update, context):
 
     # Check the status code of the response
     if response.status_code == 200:
-        print(response.json()['message'])
-        update.message.reply_text(response.json()['message'])
+        if response.json()['message'] == 'News already exists!':
+            update.message.reply_text(response.json()['message'])
+
+            if response.json()['open'] == True:
+                update.message.reply_text("**This Thread is Already Open**")
+            
+            if response.json()['isTrue'] == True:
+                update.message.reply_text("This is a \"CORRECT\" news with \nUPVOTES: "+str(response.json()['upvotes'])+"\nDOWNVOTES: "+str(response.json()['downvotes']))
+            else:
+                update.message.reply_text("This is a \"FAKE\" news with \nUPVOTES: "+str(response.json()['upvotes'])+"\nDOWNVOTES: "+str(response.json()['downvotes']))
+        else:  
+            update.message.reply_text(response.json()['message'])
         print("Success!")
     else:
         print("Error: " + str(response.status_code))
 
     # Send a message to the user with the processed text
-    update.message.reply_text("Your message has been processed: \n\"" + processed_text + "\" \nYou will be notified when the results are ready.")
+    # update.message.reply_text("Your message has been processed: \n\"" + processed_text + "\" \nYou will be notified when the results are ready.")
 
 
 
