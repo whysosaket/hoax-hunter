@@ -36,9 +36,10 @@ def sentence_similarity():
 
         # Get the similarity score from the response
         similarity_score = response_json['similarity']
+        print(similarity_score)
 
         # Check if the similarity score is above a certain threshold
-        if similarity_score > 0.8:
+        if similarity_score > 0.7:
             # The sentences are similar
             return jsonify({"result": "similar"})
         else:

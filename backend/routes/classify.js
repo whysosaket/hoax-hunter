@@ -30,6 +30,19 @@ router.route('/all')
     }
 })
 
+router.route('/get')
+.post(async (req, res)=>{
+    try{
+        const id = req.body.id;
+        const classify = await Classified.findById(id);
+        res.json({success, classify});
+    }
+    catch(error){
+        console.log(error.message);
+        res.status(500).send("Internal Server Error!");
+    }
+})
+
 
 // Route 1: Vote a Classification
 router.route("/vote").post(async (req, res) => {

@@ -56,18 +56,22 @@ def process_input(update, context):
     # Send the POST request
     response = requests.post(url, json=data, headers=headers, params={"username": username})
 
+    reqstep = True
+
     # Check the status code of the response
     if response.status_code == 200:
         if response.json()['message'] == 'News already exists!':
+            reqstep = False
             update.message.reply_text(response.json()['message'])
+            correctness = round(response.json()['upvotes']/(response.json()['upvotes']+response.json()['downvotes'])*100, 2)
 
             if response.json()['open'] == True:
                 update.message.reply_text("**This Thread is Already Open**")
             
             if response.json()['isTrue'] == True:
-                update.message.reply_text("This is a \"CORRECT\" news with \nUPVOTES: "+str(response.json()['upvotes'])+"\nDOWNVOTES: "+str(response.json()['downvotes']))
+                update.message.reply_text("This is a \"CORRECT\" news with \nUPVOTES: "+str(response.json()['upvotes'])+"\nDOWNVOTES: "+str(response.json()['downvotes'])+"\nCORRECTNESS: "+ str(correctness)+"%")
             else:
-                update.message.reply_text("This is a \"FAKE\" news with \nUPVOTES: "+str(response.json()['upvotes'])+"\nDOWNVOTES: "+str(response.json()['downvotes']))
+                update.message.reply_text("This is a \"FAKE\" news with \nUPVOTES: "+str(response.json()['upvotes'])+"\nDOWNVOTES: "+str(response.json()['downvotes'])+"\nCORRECTNESS: "+ str(correctness)+"%")
         else:  
             update.message.reply_text(response.json()['message'])
         print("Success!")
@@ -77,6 +81,41 @@ def process_input(update, context):
     # Send a message to the user with the processed text
     # update.message.reply_text("Your message has been processed: \n\"" + processed_text + "\" \nYou will be notified when the results are ready.")
 
+    # Code for bot to check similarity and then respond to user is a similar msg is found
+    if reqstep:
+        response = getclassified()
+        # Check if the request was successful
+        if response["success"]:
+            # Get the list of elements
+            elements = response["all"]
+            print(elements)
+
+            # Loop through each element in the list
+            for element in elements:
+                # Do something with the element
+                similar = similarity(processed_text, element['info'])
+                print(similar)
+                if similar['result'] == 'similar':
+                    # make a req. to get a specific classification id
+                    uri = 'http://localhost:9000/api/classify/get'
+                    data = {"id": str(element['_id'])}
+                    response = requests.post(uri, json=data)
+                    upvotes = response.json()['classify']['upvotes']
+                    downvotes = response.json()['classify']['downvotes']
+                    correctness = round(upvotes/(upvotes+downvotes)*100, 2)
+
+                    if response.json()['classify']['open'] == True:
+                        update.message.reply_text("**This Thread is Already Open**")
+            
+                    if response.json()['classify']['isTrue'] == True:
+                        update.message.reply_text("This is a \"CORRECT\" news with \nUPVOTES: "+str(upvotes)+"\nDOWNVOTES: "+str(downvotes)+"\nCORRECTNESS: "+ str(correctness)+"%")
+                    else:
+                        update.message.reply_text("This is a \"FAKE\" news with \nUPVOTES: "+str(upvotes)+"\nDOWNVOTES: "+str(downvotes)+"\nCORRECTNESS: "+ str(correctness)+"%")
+                    break
+
+               
+        else:
+            print("Error in the request")
 
 
 
@@ -90,9 +129,14 @@ def error(update, context):
 
 # Handles similarity part
 def similarity(sentence1, sentence2):
-    url = 'http://127.0.0.1:5000//sentence-similarity'
+    urls = 'http://127.0.0.1:5000/sentence-similarity'
     data = {'sentence1': sentence1, 'sentence2': sentence2}
-    response = requests.post(url, json=data)
+    response = requests.post(urls, json=data)
+    return response.json()
+
+def getclassified():
+    urlc = 'http://localhost:9000/api/classify/all'
+    response = requests.get(urlc)
     return response.json()
 
 
