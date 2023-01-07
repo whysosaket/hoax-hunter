@@ -58,7 +58,7 @@ def process_input(update, context):
 
     # Check the status code of the response
     if response.status_code == 200:
-        print(response)
+        print(response.json())
         print("Success!")
     else:
         print("Error: " + str(response.status_code))

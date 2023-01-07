@@ -1,27 +1,53 @@
-import spacy
-from flask import Flask, request
+from flask import Flask, request, jsonify
+import requests
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 
-# Load the SpaCy model
-nlp = spacy.load('en_core_web_md')
+@app.route('/sentence-similarity', methods=['POST'])
+def sentence_similarity():
+    # Get the first sentence from the request body
+    sentence1 = request.json['sentence1']
 
-@app.route('/sentences', methods=['POST'])
-def compare_sentences():
-    # Get the two sentences from the request form data
-    sentence1 = request.form['sentence1']
-    sentence2 = request.form['sentence2']
+    # Get the second sentence from the request body
+    sentence2 = request.json['sentence2']
 
-    # Tokenize the sentences and calculate their similarity
-    doc1 = nlp(sentence1)
-    doc2 = nlp(sentence2)
-    similarity = doc1.similarity(doc2)
+    # Set the API endpoint and the API key
+    endpoint = "https://api.dandelion.eu/datatxt/sim/v1/"
+    api_key = os.environ['SIM']
 
-    # Return "true" if the similarity is above the threshold, "false" otherwise
-    if similarity > 0.5:
-        return 'true'
+    # Set the query parameters
+    params = {
+        "text1": sentence1,
+        "text2": sentence2,
+        "token": api_key,
+    }
+
+    # Send the GET request
+    response = requests.get(endpoint, params=params)
+
+    # Check the status code of the response
+    if response.status_code == 200:
+        # Get the JSON response from the API
+        response_json = response.json()
+
+        # Get the similarity score from the response
+        similarity_score = response_json['similarity']
+
+        # Check if the similarity score is above a certain threshold
+        if similarity_score > 0.8:
+            # The sentences are similar
+            return jsonify({"result": "similar"})
+        else:
+            # The sentences are not similar
+            return jsonify({"result": "not similar"})
     else:
-        return 'false'
+        # There was an error calling the API
+        return jsonify({"error": "API error"})
+
 
 if __name__ == '__main__':
     app.run()
