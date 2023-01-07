@@ -88,7 +88,6 @@ def process_input(update, context):
         if response["success"]:
             # Get the list of elements
             elements = response["all"]
-            print(elements)
 
             # Loop through each element in the list
             for element in elements:
