@@ -1,10 +1,18 @@
 import logging
 import os
 import pymongo
+import pytesseract
+import requests
 
-from google.cloud import translate
-from google.cloud import vision
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# Set the URL of the server you want to send the request to
+url = "http://localhost:9000/api/news/addnews"
+
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -12,74 +20,74 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
-# Set the Google Cloud credentials
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/path/to/credentials.json'
-
-# Create a client for the Google Cloud Translation API
-translate_client = translate.Client()
-
-# Create a client for the Google Cloud Vision API
-vision_client = vision.ImageAnnotatorClient()
-
 
 # Define a function to process the user input
 def process_input(update, context):
     # Get the user input
     input_text = update.message.text
-    input_type = update.message.document.mime_type
+    input_type = update.message.document.mime_type if update.message.document is not None else 'text/plain'
     username = update.message.from_user.username
+
+    print(input_type)
 
     # Convert the input to English if it is a text or image
     if input_type == 'text/plain':
-        # Use the Google Translate API to translate the text to English
-        result = translate_client.translate(input_text, target_language='en')
-        translated_text = result['translatedText']
-        processed_text = translated_text
+        processed_text = input_text
     elif input_type == 'image/jpeg':
         # Use the Google Cloud Vision API to extract the text from the image
-        image = vision.types.Image()
-        image.source.image_uri = update.message.document.get_file().file_path
-        response = vision_client.document_text_detection(image=image)
-        text = response.full_text_annotation.text
-        # Use the Google Translate API to translate the text to English
-        result = translate_client.translate(text, target_language='en')
-        translated_text = result['translatedText']
-        processed_text = translated_text
+        print("images")
+         # Download the image file
+        image_file = update.message.document.get_file()
+        image_file.download('image.jpg')
+
+        # Extract the text from the image using Tesseract
+        text = pytesseract.image_to_string('image.jpg')
+
+        processed_text = text
     else:
         processed_text = 'Unsupported input type.'
 
-    # Store the processed text in MONGODB
+    # Set the body information
+    data = {'info': processed_text, 'username': username}
 
-    # Create a client for the MongoDB database
-    client = pymongo.MongoClient('mongodblink')
-    # Get the database
-    db = client['telegram']
-    # Get the collection
-    collection = db['News']
-    # Create a document
-    document = {'info': processed_text, 'username': username}
-    # Insert the document into the collection
-    collection.insert_one(document)
+    # Set the headers
+    headers = {"Content-Type": "application/json"}
+
+    # Send the POST request
+    response = requests.post(url, json=data, headers=headers, params={"username": username})
+
+    # Check the status code of the response
+    if response.status_code == 200:
+        print(response)
+        print("Success!")
+    else:
+        print("Error: " + str(response.status_code))
 
     # Send a message to the user with the processed text
-    update.message.reply_text("Your message has been processed: " + processed_text + "You will be notified when the results are ready.")
+    update.message.reply_text("Your message has been processed: \n\"" + processed_text + "\" \nYou will be notified when the results are ready.")
 
 
 # Define the command handler for the /start command
 def start(update, context):
     update.message.reply_text('Hi! Send me a text or image.')
 
+def error(update, context):
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
+
 
 # Define the main function
 def main():
     # Create the Updater and pass it the bot's token
-    updater = Updater('YOUR_BOT_TOKEN', use_context=True)
+    updater = Updater(os.environ['TOKEN'], use_context=True)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
     # Add the command handler for the /start command
     dp.add_handler(CommandHandler('start', start))
+
+    # Add the error handler
+    dp.add_error_handler(error)
 
     # Add the message handler to process user input
     dp.add_handler(MessageHandler(Filters.text | Filters.document, process_input))

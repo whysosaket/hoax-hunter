@@ -45,6 +45,7 @@ router.route("/addnews").post(async (req, res) => {
       if (news.isClassified) {
         const news = await News.create({
           info,
+          username,
           isClassified: true,
           classification: news.classification,
         });
@@ -57,6 +58,7 @@ router.route("/addnews").post(async (req, res) => {
     } else {
       const news = await News.create({
         info,
+        username
       });
       success = true;
       res.json({

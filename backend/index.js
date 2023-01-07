@@ -20,10 +20,10 @@ app.use(cors());
 app.use(express.json());
 
 // Avialable Routes
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/scan', require('./routes/scan'));
-// app.use('/api/records', require('./routes/records'));
-// app.use('/api/admin', require('./routes/admin'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/adduser', require('./routes/adduser'));
+app.use('/api/news', require('./routes/news'));
+app.use('/api/classify', require('./routes/classify'));
 // app.use('/api/qr', require('./routes/qr'));
 // app.use('/api/profile', require('./routes/profile'));
 

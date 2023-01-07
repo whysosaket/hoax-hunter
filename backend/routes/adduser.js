@@ -4,14 +4,11 @@ require('dotenv').config();
 const expess = require('express');
 const router = expess.Router();
 
-// importinhg the fetchuser middleware
-const fetchuser = require('../middleware/fetchuser');
-
 // Importing the User model
 const User = require('../models/User');
 
 router.route('/createuser')
-.post(fetchuser, async (req, res)=>{
+.post( async (req, res)=>{
     const {name, email, password, cpassword} = req.body;
     try{
         // Check if the user with this email already exists
@@ -41,3 +38,5 @@ router.route('/createuser')
         res.status(500).send("Internal Server Error!");
     }
 })
+
+module.exports = router;
