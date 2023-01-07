@@ -58,7 +58,8 @@ def process_input(update, context):
 
     # Check the status code of the response
     if response.status_code == 200:
-        print(response.json())
+        print(response.json()['message'])
+        update.message.reply_text(response.json()['message'])
         print("Success!")
     else:
         print("Error: " + str(response.status_code))
@@ -67,12 +68,22 @@ def process_input(update, context):
     update.message.reply_text("Your message has been processed: \n\"" + processed_text + "\" \nYou will be notified when the results are ready.")
 
 
+
+
 # Define the command handler for the /start command
 def start(update, context):
     update.message.reply_text('Hi! Send me a text or image.')
 
+# Handles any errors in the Telegram Bot
 def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
+
+# Handles similarity part
+def similarity(sentence1, sentence2):
+    url = 'http://127.0.0.1:5000//sentence-similarity'
+    data = {'sentence1': sentence1, 'sentence2': sentence2}
+    response = requests.post(url, json=data)
+    return response.json()
 
 
 # Define the main function

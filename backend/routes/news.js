@@ -60,6 +60,12 @@ router.route("/addnews").post(async (req, res) => {
         info,
         username
       });
+
+      const classify = await Classified.create({
+        info,
+        open: true,
+        isTrue: false
+      })
       success = true;
       res.json({
         success,

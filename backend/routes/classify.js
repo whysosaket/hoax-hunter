@@ -16,7 +16,19 @@ const Comment = require("../models/Comment");
 //importing fetchuser middleware
 const fetchuser = require("../middleware/fetchuser");
 
-
+// Route 0: Get all classified message
+router.route('/all')
+.get(async (req, res)=>{
+    try{
+        const all = await Classified.find({}, 'info')
+        let success = true;
+        res.json({success, all});
+    }
+    catch(error){
+        console.log(error.message);
+        res.status(500).send("Internal Server Error!");
+    }
+})
 
 
 // Route 1: Vote a Classification
